@@ -4,11 +4,17 @@ Bootstrap Carousel plugin for wordpress
 
 Check out the [demo](http://bootstrapped.humanific.com) 
 
-By [humanific](http://humanific.com)
+### shortcode
+
+####attributes  
+#####ids
+
+  [carousel ids="112,223,12"]
 
 ## Quick start
 
 Copy the Folder in your Wordpress plugin folder and enable it. 
+
 
 ## Bugs and feature requests
 
@@ -17,6 +23,8 @@ Have a bug or a feature request? [Please open a new issue](https://github.com/hu
 ## Contributing
 
 Submit your pull request and I will check it.
+
+By [humanific](http://humanific.com)
 
 ## Copyright and license
 
