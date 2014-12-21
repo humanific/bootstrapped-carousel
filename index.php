@@ -12,56 +12,79 @@ Version: 0.1
 Author URI: http://humanific.com
 */
 
-function bootstrapped_carousel_get($images){
-	global $carouselid;
+function bootstrapped_carousel_shortcode( $atts, $content = null ) {
+   global $post;
+   global $carouselid;
+
+
+   if(isset($atts['ids'])){
+      $pids = explode(',', $atts['ids']);
+     $ids = array();
+     foreach( $pids as $id ) $ids[] = intval($id);
+      $wpq = new WP_Query( array(  'post__in' => $ids ,'post_type' => 'attachment','post_status'=>'inherit','posts_per_page' => -1,'orderby' => 'post__in') );
+      $images = $wpq->posts;
+   }else if(isset($atts['postid'])){
+    $images =get_children( array('post_parent' => $atts['postid'], 'post_status' => 'inherit', 'post_type' => 'attachment', 'post_mime_type' => 'image', 'order' => 'ASC', 'orderby' => 'menu_order ID') );
+   }else if($content==null) {
+      $images =get_children( array('post_parent' => $post->ID, 'post_status' => 'inherit', 'post_type' => 'attachment', 'post_mime_type' => 'image', 'order' => 'ASC', 'orderby' => 'menu_order ID') );
+   }
+
+  $atts['indicators'] = !isset($atts['indicators']) || $atts['indicators'] != 'false' ;
+	$atts['controls'] = !isset($atts['controls']) || $atts['controls'] != 'false' ;
 	$carouselid++;
+  $first = -1;
+
+
 	ob_start();
-	if ($images) :?>
-		<div class="carousel slide" data-ride="carousel" id="carousel<?php echo $carouselid ?>">
+	?>
+		<div class="carousel slide" data-interval="<?php echo $atts['interval'] ? $atts['interval'] : 5000 ?>" id="carousel<?php echo $carouselid ?>" data-ride="carousel">
 		  <!-- Indicators -->
+      <?php if($atts['indicators']): ?>
 		  <ol class="carousel-indicators">
 			<?php 
-			foreach( $images as $k => $imagePost ): ?>
-				<li data-target="#carousel<?php echo $carouselid ?>" data-slide-to="<?php echo $k;?>" <?php if($k==0) : ?> class="active" <?php endif; ?>></li>
-			<?php endforeach ;?>
+      if ($images) :
+  			foreach( $images as $k => $imagePost ): 
+          if($first===-1) $first = $k;
+          ?>
+  				<li data-target="#carousel<?php echo $carouselid ?>" data-slide-to="<?php echo $k;?>" <?php if($k==$first) : ?> class="active" <?php endif; ?>></li>
+  			<?php endforeach ; 
+      endif; ?>
+
 		  </ol>
-		  <!-- Wrapper for slides -->
+		  <?php endif; ?>
 		  <div class="carousel-inner">
 			<?php 
-			foreach( $images as $k => $imagePost ): 
-				$image_attributes = wp_get_attachment_image_src(  $imagePost->ID, 'big' ); 
-				?>
-				<div class="item<?php if($k==0) : ?> active<?php endif; ?>" ><img src="<?php echo $image_attributes[0]; ?>" /></div>
-			<?php endforeach ;?>
+      if ($images) :
+  			foreach( $images as $k => $imagePost ): 
+  				$image_attributes = wp_get_attachment_image_src(  $imagePost->ID, 'big' ); 
+  				?>
+  				<div class="item<?php if($k==$first) : ?> active<?php endif; ?>" ><img class="fullwidth" src="<?php echo $image_attributes[0]; ?>" /></div>
+  			<?php endforeach;
+      endif; ?>
+
+      <?php echo str_replace(array('<p>','</p>'), array('',''), $content);  ?>
+
 		  </div>
-		  <!-- Controls -->
+
+		  <?php 
+
+      if($atts['controls']): ?>
 		  <a class="left carousel-control" href="#carousel<?php echo $carouselid ?>" data-slide="prev">
 			<span class="glyphicon glyphicon-chevron-left"></span>
 		  </a>
 		  <a class="right carousel-control" href="#carousel<?php echo $carouselid ?>" data-slide="next">
 			<span class="glyphicon glyphicon-chevron-right"></span>
 		  </a>
+    <?php endif; ?>
 		</div>
-		<?php endif; 
-		return ob_get_clean();
+		<?php 
+
+    return ob_get_clean();
 }
 
 
-function bootstrapped_carousel_shortcode( $atts, $content = null ) {
-   global $post;
-   if(isset($atts['ids'])){
-   		$pids = explode(',', $atts['ids']);
-	   $ids = array();
-	   foreach( $pids as $id ) $ids[] = intval($id);
-   		$wpq = new WP_Query( array(  'post__in' => $ids ,'post_type' => 'attachment','post_status'=>'inherit','posts_per_page' => -1,'orderby' => 'post__in') );
-		$images = $wpq->posts;
-   }else if(isset($atts['postid'])){
-		$images =get_children( array('post_parent' => $atts['postid'], 'post_status' => 'inherit', 'post_type' => 'attachment', 'post_mime_type' => 'image', 'order' => 'ASC', 'orderby' => 'menu_order ID') );
-   }else{
-   		$images =get_children( array('post_parent' => $post->ID, 'post_status' => 'inherit', 'post_type' => 'attachment', 'post_mime_type' => 'image', 'order' => 'ASC', 'orderby' => 'menu_order ID') );
-   }
-   return bootstrapped_carousel_get($images);
-}
+
+
 
 add_shortcode( 'carousel', 'bootstrapped_carousel_shortcode' );
 
